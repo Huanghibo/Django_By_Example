@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}{{ image.title }}{% endblock %}
+{% block content %}
+    <h1>{{ image.title }}</h1>
+
+    {% load thumbnail %}
+    <!-- 生成固定宽度为300px的缩略图（只限制宽度），用户户第一次加载这页面时，缩略图将会被创建，生成的缩略图将会在接下来的请求中被使用 -->
+    {% thumbnail image.image "300" as im %}
+        <!-- image字段（ImageField）的url方法 -->
+        <a href="{{ image.image.url }}">
+            <!-- im是裁剪后的小图，展示小图，超链接到原图 -->
+            <img src="{{ im.url }}" class="image-detail">
+        </a>
+    {% endthumbnail %}
+    <!-- 通过图片反向关联获取用户，使用with标签把所有统计user likes查询集的结果保存在变量total_likes中，可以避免计算两次查询集 -->
+    {% with total_likes=image.users_like.count users_like=image.users_like.all %}
+        <div class="image-info">
+            <div>
+                <span class="count">
+                    <span class="total">{{ total_likes }}人喜欢</span>
+                </span>
+                <span class="count">
+                    <span class="total">浏览{{ total_views }}次</span>
+                </span>
+                <a href="#" data-id="{{ image.id }}" data-action="{% if request.user in users_like %}un{% endif %}like"
+                   class="like button">
+                    {% if request.user not in users_like %}
+                        喜欢
+                    {% else %}
+                        不喜欢
+                    {% endif %}
+                </a>
+            </div>
+            {{ image.description|linebreaks }}
+        </div>
+        <div class="image-likes">
+            {% for user in image.users_like.all %}
+                <div>
+                    <!-- 通过图片反向关联获取用户，再通过用户反向关联详细信息模型的photo字段的url方法 -->
+                    <img src="{{ user.profile.photo.url }}">
+                    <p>{{ user.first_name }}</p>
+                </div>
+            {% empty %}
+                暂无人喜欢该图片
+            {% endfor %}
+        </div>
+    {% endwith %}
+{% endblock %}
+
+
+{% block domready %}
+    $('a.like').click(function(e){
+        //使用e.preventDefault()避免<a>标签的默认行为，阻止链接跳转到其他地方
+        e.preventDefault();
+        // $.post()向服务器执行异步POST请求，jQuery同样提供$.get()方法执行GET请求和低级别的$.ajax()方法
+        $.post('{% url "images:like" %}',
+            //从<a>标签的data-id和data-action中获取image_like视图中的id和action参数的值，建立要发送的POST参数字典
+            {
+                id: $(this).data('id'),
+                action: $(this).data('action')
+            },
+            //当HTTP响应被接收时的回调函数
+            function(data){
+                //获取接收数据的status属性然后检查它的值是否是ok
+                if (data['status'] == 'ok')
+                    {
+                        var previous_action = $('a.like').data('action');
+                        // 切换data-action的值
+                        $('a.like').data('action', previous_action == 'like' ? 'unlike' : 'like');
+                        // 切换超链接文本
+                        $('a.like').text(previous_action == '喜欢' ? '不喜欢' : '喜欢');
+                        // 基于action来更新总喜欢的人数
+                        var previous_likes = parseInt($('span.count .total').text());
+                        $('span.count .total').text(previous_action == 'like' ? previous_likes + 1 : previous_likes - 1);
+                    }
+        });
+    });
+{% endblock %}

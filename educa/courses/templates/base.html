@@ -1,0 +1,36 @@
+{% load staticfiles %}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>{% block title %}慕课网{% endblock %}</title>
+    <link href="{% static "css/base.css" %}" rel="stylesheet">
+</head>
+<body>
+<div id="header">
+    <a href="/" class="logo">慕课网</a>
+    <ul class="menu">
+        {% if request.user.is_authenticated %}
+            <li><a href="{% url "logout" %}">退出</a></li>
+        {% else %}
+            <li><a href="{% url "login" %}">登录</a></li>
+        {% endif %}
+    </ul>
+</div>
+<div id="content">
+    {% block content %}
+    {% endblock %}
+</div>
+
+<script src="https://cdn.bootcss.com/jquery/2.1.4/jquery.min.js"></script>
+<script src="https://cdn.bootcss.com/jqueryui/1.11.4/jquery-ui.min.js"></script>
+<!-- domready：位于jQuery的$document.ready()方法内，在DOM完成加载时执行代码 -->
+<script>
+    $(document).ready(function () {
+        {% block domready %}
+        {% endblock %}
+    });
+</script>
+</body>
+</html>

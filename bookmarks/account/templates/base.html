@@ -1,0 +1,83 @@
+{% load staticfiles %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{% block title %}{% endblock %}</title>
+    <link href="{% static "css/base.css" %}" rel="stylesheet">
+</head>
+<body>
+
+<div id="header">
+    <span class="logo">图片收藏</span>
+    {% if request.user.is_authenticated %}
+        <ul class="menu">
+            <li {% if section == "dashboard" %}class="selected"{% endif %}><a href="{% url "account:dashboard" %}">控制面板</a></li>
+            <li {% if section == "images" %}class="selected"{% endif %}><a href="{% url "images:list" %}">图片</a></li>
+            <li {% if section == "people" %}class="selected"{% endif %}><a href="{% url "account:user_list" %}">用户</a>
+</li>
+        </ul>
+    {% endif %}
+
+    <span class="user">
+    {% if request.user.is_authenticated %}
+        欢迎回来，{{ request.user.username }}  |
+        <a href="{% url "password_change" %}">修改密码</a>  |
+        <a href="{% url "account:logout" %}">退出</a>
+    {% else %}
+        <a href="{% url "account:login" %}">登录</a>
+    {% endif %}
+    </span>
+
+</div>
+
+{% if messages %}
+    <ul class="messages">
+        {% for message in messages %}
+            <!-- 也就是views.py中的messages.success和messages.error中的success和error -->
+            <li class="{{ message.tags }}">
+                {{ message|safe }}
+                <a href="#" class="close"> </a>
+            </li>
+        {% endfor %}
+    </ul>
+{% endif %}
+
+<div id="content">
+    {% block content %}
+    {% endblock %}
+</div>
+
+
+<!-- 下面的通过jQuery和jQuery Cookie插件提交包含CSRF token的AJAX请求的代码可以直接拷贝  -->
+<!-- 现在在Django模板中引入了JavaScript代码，更好的引入方法是加载.js文件，在有大量脚本时尤其如此，.js文件是作为静态文件提供 -->
+<script src="https://cdn.bootcss.com/jquery/2.1.4/jquery.min.js"></script>
+<!-- 引入jQuery Cookie 插件，就可以实现和cookies交互 -->
+<script src="https://cdn.bootcss.com/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
+<script>
+// AJAX请求将CSRF token作为POST数据传递给每个POST请求不方便，因此允许在XMLHttpRequest请求中设置定制的X-CSRFToken头为CSRF token
+    // 如果开启CSRF保护，可以从csrftoken cookie中读取到CSRF token
+    var csrftoken = $.cookie('csrftoken');
+    function csrfSafeMethod(method) {
+    // 定义csrfSafeMethod函数来检查HTTP方法是否安全，安全方法不要求CSRF保护，他们分别是GET, HEAD, OPTIONS, TRACE
+        return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+    }
+    // 用$.ajaxSetup()设置jQuery AJAX请求，在每个AJAX请求执行前，检查请求方法是否安全以及当前请求是否跨域名
+    // 如果请求不安全，使用从cookie中获得的值设置X-CSRFToken头，设置将会应用到所有由jQuery执行的AJAX请求中
+    // 也就是说，CSRF token将会在所有的不安全HTTP方法的AJAX请求中引入，比如POST, PUT
+    $.ajaxSetup({
+        beforeSend: function (xhr, settings) {
+            if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                xhr.setRequestHeader("X-CSRFToken", csrftoken);
+            }
+        }
+    });
+    // 当页面被载入时，DOM（Document Object Model）被浏览器创建为树对象，$(document).ready()是jQuery函数，会在DOM层加载完毕后执行
+    // Django模板语言是在服务端被渲染并输出最终的HTML文档，JavaScript是在客户端被执行的
+    $(document).ready(function () {
+        // domready模板块在扩展基础模版之后将会引入特定的JavaScript
+        {% block domready %}
+        {% endblock %}
+    });
+</script>
+</body>
+</html>

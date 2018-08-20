@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% load thumbnail %}
+{% block title %}{{ user.get_full_name }}{% endblock %}
+{% block content %}
+    <h1>{{ user.get_full_name }}</h1>
+    <div class="profile-info">
+        {% thumbnail user.profile.photo "180x180" crop="100%" as im %}
+            <img src="{{ im.url }}" class="user-detail">
+        {% endthumbnail %}
+    </div>
+    {% with total_followers=user.followers.count %}
+        <span class="count">
+            <span class="total">{{ total_followers }}</span> 粉丝
+        </span>
+        <!-- 通过中间模型获取所有粉丝 -->
+        <a href="#" data-id="{{ user.id }}" data-action="{% if request.user in user.followers.all %}un{%endif %}follow" class="follow button">
+            {% if request.user not in user.followers.all %}
+                关注
+            {% else %}
+                取消关注
+            {% endif %}
+        </a>
+        <div id="image-list" class="image-container">
+            <!-- user模型反向关联到image模型，把user.images_created.all存储到images变量中，list_ajax.html可以直接调用images变量 -->
+            {% include "images/image/list_ajax.html" with images=user.images_created.all %}
+        </div>
+    {% endwith %}
+{% endblock %}
+
+
+{% block domready %}
+    $('a.follow').click(function(e){
+        //使用e.preventDefault()避免<a>标签的默认行为，阻止链接跳转到其他地方
+        e.preventDefault();
+        // $.post()向服务器执行异步POST请求，jQuery同样提供$.get()方法执行GET请求和低级别的$.ajax()方法
+        $.post('{% url "account:user_follow" %}',
+            //从<a>标签的data-id和data-action中获取user_follow视图中的id和action参数的值，建立要发送的POST参数字典
+            {
+                id: $(this).data('id'),
+                action: $(this).data('action')
+            },
+            //当HTTP响应被接收时的回调函数
+            function(data){
+                //获取接收数据的status属性然后检查它的值是否是ok
+                if (data['status'] == 'ok')
+                {
+                    var previous_action = $('a.follow').data('action');
+                    // 切换data-action的值
+                    $('a.follow').data('action', previous_action == 'follow' ? 'unfollow' : 'follow');
+                    // 切换超链接文本
+                    $('a.follow').text(previous_action == '关注' ? '取消关注' : '关注');
+                    // 基于action来更新粉丝数
+                    var previous_followers = parseInt($('span.count .total').text());
+                    $('span.count .total').text(previous_action == 'follow' ? previous_followers + 1 : previous_followers - 1);
+                }
+        });
+    });
+{% endblock %}

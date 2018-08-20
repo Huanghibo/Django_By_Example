@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}
+    编辑 "{{ course.title }}"
+{% endblock %}
+{% block content %}
+    <h1>Edit "{{ course.title }}"</h1>
+    <div class="module">
+        <h2>课程模块</h2>
+        <form action="" method="post">
+            {{ formset }}
+{#  formset.management_form包含给formset使用的管理表单，这个管理表单包含隐藏的字段去控制保单的初始化、总数、最小值和最大值  #}
+            {{ formset.management_form }}
+            {% csrf_token %}
+            <input type="submit" class="button" value="保存模块">
+        </form>
+    </div>
+{% endblock %}

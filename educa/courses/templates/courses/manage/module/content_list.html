@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% load course %}
+
+
+{% block title %}
+    模块 {{ module.order|add:1 }}: {{ module.title }}
+{% endblock %}
+{% block content %}
+    {% with course=module.course %}
+        <h1>课程 "{{ course.title }}"</h1>
+        <div class="contents">
+            <h3>模块</h3>
+            <ul id="modules">
+                {% for m in course.modules.all %}
+                    <li data-id="{{ m.id }}" {% if m == module %} class="selected"{% endif %}>
+                        <a href="{% url "module_content_list" m.id %}">
+                            <span> 模块 <span class="order">{{ m.order|add:1 }}</span>   </span>
+                            <br> {{ m.title }}
+                        </a>
+                    </li>
+                {% empty %}
+                    <li>暂无模块</li>
+                {% endfor %}
+            </ul>
+            <p><a href="{% url "course_module_update" course.id %}">编辑模块</a></p>
+        </div>
+        <div class="module">
+            <h2>模块 {{ module.order|add:1 }}: {{ module.title }}</h2>
+            <h3>模块内容:</h3>
+            <div id="module-contents">
+                {% for content in module.contents.all %}
+                    <div data-id="{{ content.id }}">
+                        {% with item=content.item %}
+                            <p>{{ item }} ({{ item|model_name }})</p>
+                            <a href="{% url "module_content_update" module.id item|model_name item.id %}">编辑</a>
+                            <form action="{% url "module_content_delete" content.id %}" method="post">
+                                <input type="submit" value="删除">
+                                {% csrf_token %}
+                            </form>
+                        {% endwith %}
+                    </div>
+                {% empty %}
+                    <p>暂无内容</p>
+                {% endfor %}
+            </div>
+            <hr>
+            <h3>添加新内容:</h3>
+            <ul class="content-types">
+                <li><a href="{% url "module_content_create" module.id "text" %}">文本</a></li>
+                <li><a href="{% url "module_content_create" module.id "image" %}">图像</a></li>
+                <li><a href="{% url "module_content_create" module.id "video" %}">视频</a></li>
+                <li><a href="{% url "module_content_create" module.id "file" %}">文件</a></li>
+            </ul>
+        </div>
+    {% endwith %}
+{% endblock %}
+
+
+{% block domready %}
+    $('#modules').sortable({
+    // 在用户每次储存元素的时触发
+    stop: function(event, ui) {
+    modules_order = {};
+    $('#modules').children().each(function(){
+    // 给每个模块重新展示次序并且拿到每个模块的data-id属性，该属性包含了模块的id
+    $(this).find('.order').text($(this).index() + 1);
+    // 给modules_order添加id作为键、模型的新索引作为值
+    modules_order[$(this).data('id')] = $(this).index();
+    });
+    // AJAX POST请求给content_order，在请求中包含modules_orders的序列化的JSON数据，对应的ModuleOrderView会负责更新模块的顺序
+    $.ajax({
+    type: 'POST',
+    url: '{% url "module_order" %}',
+    contentType: 'application/json; charset=utf-8',
+    dataType: 'json',
+    data: JSON.stringify(modules_order)
+    });
+    }
+    });
+    $('#module-contents').sortable({
+    stop: function(event, ui) {
+    contents_order = {};
+    $('#module-contents').children().each(function(){
+    contents_order[$(this).data('id')] = $(this).index();
+    });
+    $.ajax({
+    type: 'POST',
+    url: '{% url "content_order" %}',
+    contentType: 'application/json; charset=utf-8',
+    dataType: 'json',
+    data: JSON.stringify(contents_order),
+    });
+    }
+    });
+{% endblock %}

@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% load cache %}
+
+
+{% block title %}
+    {{ object.title }}
+{% endblock %}
+{% block content %}
+    <h1>
+        {{ module.title }}
+    </h1>
+    <div class="contents">
+        <h3>模块</h3>
+        <ul id="modules">
+            {% for m in object.modules.all %}
+                <li data-id="{{ m.id }}" {% if m == module %}
+                    class="selected"{% endif %}>
+                    <a href="{% url "students:student_course_detail_module" object.id m.id %}">
+<span>
+模块 <span class="order">{{ m.order|add:1 }}</span>
+</span>
+                        <br>
+                        {{ m.title }}
+                    </a>
+                </li>
+            {% empty %}
+                <li>No modules yet.</li>
+            {% endfor %}
+        </ul>
+    </div>
+    <div class="module">
+    {#   缓存时间600秒，使用名字module_contents和传递Module对象来缓存模板片段，避免缓存错误的模型内容和服务错误的内容，如果USE_I18N为True，中间件缓存将会遵照当前激活的语言   #}
+    {% cache 600 module_contents module %}
+        {% for content in module.contents.all %}
+            {% with item=content.item %}
+                <h2>{{ item.title }}</h2>
+                {{ item.render }}
+            {% endwith %}
+        {% endfor %}
+    {% endcache %}
+    </div>
+{% endblock %}

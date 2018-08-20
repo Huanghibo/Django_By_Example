@@ -1,0 +1,48 @@
+<html>
+<body>
+<h1>在线商店</h1>
+<p>
+    账单 {{ order.id }}</br>
+    <span class="secondary">
+{{ order.created|date:"M d, Y" }}
+</span>
+</p>
+<h3>收件人</h3>
+<p>
+    {{ order.first_name }} {{ order.last_name }}<br>
+    {{ order.email }}<br>
+    {{ order.address }}<br>
+    {{ order.postal_code }}, {{ order.city }}
+</p>
+<h3>购买的商品</h3>
+<table>
+    <thead>
+    <tr>
+        <th>产品</th>
+        <th>单价</th>
+        <th>数量</th>
+        <th>总价</th>
+    </tr>
+    </thead>
+    <tbody>
+    <!-- 通过order返现关联到orderitem模型 -->
+    {% for item in order.items.all %}
+        <tr class="row{% cycle "1" "2" %}">
+            <!-- 通过orderitem返现关联到product模型 -->
+            <td>{{ item.product.name }}</td>
+            <td class="num">${{ item.price }}</td>
+            <td class="num">{{ item.quantity }}</td>
+            <td class="num">${{ item.get_cost }}</td>
+        </tr>
+    {% endfor %}
+    <tr class="total">
+        <td colspan="3">总计</td>
+        <td class="num">${{ order.get_total_cost }}</td>
+    </tr>
+    </tbody>
+</table>
+<span class="{% if order.paid %}paid{% else %}pending{% endif %}">
+{% if order.paid %}已支付{% else %}未付款{% endif %}
+</span>
+</body>
+</html>

@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% load thumbnail %}
+{% block title %}用户{% endblock %}
+{% block content %}
+    <h1>用户</h1>
+    <div id="people-list">
+        {% for user in users %}
+            <div class="user">
+                <a href="{{ user.get_absolute_url }}">
+                    <!--  通过user反向关联到profile，然后获取photo字段 -->
+                    {% thumbnail user.profile.photo "180x180" crop="100%" as im %}
+                        <img src="{{ im.url }}">
+                    {% endthumbnail %}
+                </a>
+                <div class="info">
+                    <a href="{{ user.get_absolute_url }}" class="title">
+                        <!-- user模型自带的get_full_name()方法，返回first_name last_name -->
+                        {{ user.get_full_name }}
+                    </a>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}

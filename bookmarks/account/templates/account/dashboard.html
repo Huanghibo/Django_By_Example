@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}控制面板{% endblock %}
+{% block content %}
+    <h1>控制面板</h1>
+    <!-- 通过用户反向关联获取图片 -->
+    {% with total_images_created=request.user.images_created.count %}
+        <p>欢迎回来，你已经收藏{{ total_images_created }}张图片</p>
+    {% endwith %}
+    <p>拖动按钮到收藏夹，就可以从其他网站收藏你喜欢的图片啦！ → <a href="javascript:{% include "bookmarklet_launcher.js" %}"  class="button">添加收藏</a><p>
+    <p>点击<a href="{% url "account:edit" %}">编辑个人信息</a> 或 <a href="{% url "password_change" %}">修改密码</a></p>
+
+
+    <h2>最新动态</h2>
+    <div id="action-list">
+        {% for action in actions %}
+            {% include "actions/action/detail.html" %}
+        {% endfor %}
+    </div>
+
+
+{% endblock %}

@@ -1,0 +1,85 @@
+{% extends "admin/base_site.html" %}
+<!-- 扩展Djnago管理后台的admin/base_site.html模板  -->
+<!-- 要定制后台模板的话，继承block/重写模板页面，然后在应用的template目录下建立和后台相同的目录，把模板复制到目标目录内  -->
+{% load static %}
+{% block extrastyle %}
+    <link rel="stylesheet" type="text/css" href="{% static "css/admin.css" %}"/>
+{% endblock %}
+{% block title %}
+{#     block.super表示继承并重写模板的block #}
+    订单 {{ order.id }} {{ block.super }}
+{% endblock %}
+{% block breadcrumbs %}
+    <div class="breadcrumbs">
+        <a href="{% url "admin:index" %}">首页</a> ›
+        <a href="{% url "admin:orders_order_changelist" %}">订单</a>
+        ›
+        <a href="{% url "admin:orders_order_change" order.id %}">订单 {{ order.id }}</a>
+        › 详情
+    </div>
+{% endblock %}
+{% block content %}
+    <h1>订单 {{ order.id }}</h1>
+    <ul class="object-tools">
+        <li>
+            <a href="#" onclick="window.print();">打印订单</a>
+        </li>
+    </ul>
+    <table>
+        <tr>
+            <th>创建时间</th>
+            <td>{{ order.created }}</td>
+        </tr>
+        <tr>
+            <th>客户姓名</th>
+            <td>{{ order.first_name }} {{ order.last_name }}</td>
+        </tr>
+        <tr>
+            <th>客户邮箱</th>
+            <td><a href="mailto:{{ order.email }}">{{ order.email }}</a></td>
+        </tr>
+        <tr>
+            <th>客户地址</th>
+            <td>{{ order.address }}, {{ order.postal_code }} {{ order.city }}</td>
+        </tr>
+        <tr>
+            <th>总价</th>
+            <td>${{ order.get_total_cost }} USD</td>
+        </tr>
+        <tr>
+            <th>付款状态</th>
+            <td>{% if order.paid %}已支付{% else %}未付款{% endif %}</td>
+        </tr>
+    </table>
+    <div class="module">
+        <div class="tabular inline-related last-related">
+            <table>
+                <h2>购买的商品</h2>
+                <thead>
+                <tr>
+                    <th>产品</th>
+                    <th>价格</th>
+                    <th>数量</th>
+                    <th>总价</th>
+                </tr>
+                </thead>
+                <tbody>
+                <!--  从order模型反向关联查询orderitem模型 -->
+                {% for item in order.items.all %}
+                    <tr class="row{% cycle "1" "2" %}">
+                        <!--  从orderitem模型反向关联product模型  -->
+                        <td>{{ item.product.name }}</td>
+                        <td class="num">${{ item.price }}</td>
+                        <td class="num">{{ item.quantity }}</td>
+                        <td class="num">${{ item.get_cost }}</td>
+                    </tr>
+                {% endfor %}
+                <tr class="total">
+                    <td colspan="3">总计</td>
+                    <td class="num">${{ order.get_total_cost }}</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}
