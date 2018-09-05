@@ -71,7 +71,10 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'django.template.context_processors.media',
             ],
+            # 不用再在每个模板文件中都指定{% load static %}
+            'builtins': ['django.templatetags.static']
         },
     },
 ]

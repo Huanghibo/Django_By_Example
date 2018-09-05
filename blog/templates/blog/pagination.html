@@ -1,0 +1,21 @@
+<div class="pagination-simple">
+
+    {# 如果有上一页 #}
+    {% if post_list.has_previous %}
+        <a href="{% url 'blog:index'  post_list.previous_page_number %}">上一页</a>
+    {% endif %}
+    {# 所有页码迭代，只取当前页-4和当前页+4的页码，如果迭代页=当前页：改变css，否则保持一致风格 #}
+    {# post_list.paginator.page_range 函数返回包含所有页码数的range对象，即 range(1, post_list.paginator.num_pages + 1) #}
+    {% for i in post_list.paginator.page_range %}
+        {% if post_list.number == i %}
+            <span class="current">{{ i }}</span>
+        {% elif i > post_list.number|add:'-5' and i < post_list.number|add:'5' %}
+            <a href="{% url 'blog:index' i %}">{{ i }}</a>
+        {% endif %}
+    {% endfor %}
+    {# 如果有下一页 #}
+    {% if post_list.has_next %}
+        <a href="{% url 'blog:index'  post_list.next_page_number %}">下一页</a>
+    {% endif %}
+    <span>共{{ post_list.paginator.num_pages }}页</span>
+</div>

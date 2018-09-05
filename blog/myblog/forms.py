@@ -1,8 +1,8 @@
 from django import forms
-from django.contrib.auth.forms import UserCreationForm
+# from django.contrib.auth.forms import UserCreationForm
+from django.core.exceptions import NON_FIELD_ERRORS, ValidationError
 from captcha.fields import CaptchaField
 from .models import User, Comment
-from django.core.exceptions import NON_FIELD_ERRORS, ValidationError
 
 
 class CommentForm(forms.ModelForm):
@@ -62,3 +62,7 @@ class RegisterForm(forms.Form):
         if User.objects.filter(email=email).count():
             raise ValidationError('邮箱已存在')
         return email
+
+
+class SearchForm(forms.Form):
+    keyword = forms.CharField(label="搜索", max_length=50, widget=forms.TextInput(attrs={'autocomplete': "off"}))

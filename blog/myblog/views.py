@@ -177,11 +177,10 @@ def logout_view(request):
     return redirect(reverse('blog:index'))
 
 
-def index(request):
+def index(request, page=1):
     object_list = Post.published.all()
     # 每页10篇文章
     paginator = Paginator(object_list, 10)
-    page = request.GET.get('page')
     try:
         post_list = paginator.page(page)
     except PageNotAnInteger:
@@ -297,20 +296,32 @@ class ArchivesView(ListView):
         return super(ArchivesView, self).get_queryset().filter(created_time__year=year, created_time__month=month)
 
 
+def redirect_url(request, shortcode):
+    qs = Post.objects.filter(shortcode=shortcode).first()
+    # return redirect(qs.true_url, permanent=True)
+    return render(request, 'blog/redirect_url.html', locals())
+
+
 def search(request):
-    # 使用request.GET.get('q')获取用户提交的搜索关键词，因为模板中name="q"
-    # 表单get方法提交的数据保存在request.GET里，类似于Python字典的对象
-    q = request.GET.get('q')
-    error_msg = ''
-    # 如果用户没有输入搜索关键词而提交了表单，就无需执行查询，直接在模板中渲染错误提示信息
-    if not q:
-        error_msg = "请输入关键词"
-        return render(request, 'blog/index.html', {'error_msg': error_msg})
-    # icontains表示包含且不区分大小写，Q对象用于包装查询表达式，提供复杂的查询逻辑
-    # 标题含有关键词q或正文含有关键词q
-    post_list = Post.objects.filter(Q(title__icontains=q) | Q(body__icontains=q))
-    # 注意：title__icontains=q, body__icontains=q将变成标题（title）含有关键词q且正文（body）含有关键词q的意思！！
-    return render(request, 'blog/index.html', {'error_msg': error_msg, 'post_list': post_list})
+    if request.method == 'POST':
+        q = request.POST['q']
+        return redirect(reverse('blog:search_result', args=[q, 1]))
+        # redirect('blog.search_result', args=[q])
+
+
+def search_result(request, q, page=1):
+    # icontains表示包含且不区分大小写，Q 对象用于包装查询表达式，提供复杂的查询逻辑
+    # Q(title__icontains=q) | Q(body__icontains=q) 表示标题或正文含有关键词q
+    # 注意：如果使用title__icontains=q, body__icontains=q，将变成标题且正文含有关键词q的意思！！
+    object_list = Post.objects.filter(Q(title__icontains=q) | Q(body__icontains=q))
+    paginator = Paginator(object_list, 10)
+    try:
+        post_list = paginator.page(page)
+    except PageNotAnInteger:
+        post_list = paginator.page(1)
+    except EmptyPage:
+        post_list = paginator.page(paginator.num_pages)
+    return render(request, 'blog/search_result.html', locals())
 
 
 class TagView(ListView):

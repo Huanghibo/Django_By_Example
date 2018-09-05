@@ -1,6 +1,8 @@
 {% extends 'blog/base.html' %}
 {% load blog_tags %}
 
+{% block title %}【{{ q }}】的搜索结果 - {% endblock title %}
+
 
 {% block main %}
 
@@ -20,7 +22,7 @@
     </div>
   </div>
 {% empty %}
-  <div class="no-post">暂时还没有发布的文章！</div>
+  <div class="no-post">暂无{{ q }}相关文章！</div>
 {% endfor %}
 
 {% include "blog/pagination.html" %}
